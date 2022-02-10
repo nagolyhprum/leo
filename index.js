@@ -16,17 +16,47 @@ const svg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" xml
 </g>
 </svg>`
 
+const getWatermark = () => {
+    const text = "watermark";
+    const font = 24;
+    const canvas = createCanvas(1, font);
+    const context = canvas.getContext("2d");
+    context.font = `${font}px Times New Roman`;
+    canvas.width = context.measureText(text).width;
+    context.font = `${font}px Times New Roman`;
+    context.textAlign = "start";
+    context.textBaseline = "top";
+    context.fillStyle = "white";
+    context.fillText(text, 0, 0);
+    return canvas;
+}
+
 app.get("/", async (_, res) => {
     const image = await loadImage(svg);
     res.header("Content-Type", "image/png");
     const canvas = createCanvas(100, 100);
     const context = canvas.getContext("2d");
+    canvas.width = 300;
     context.fillStyle = "red";
-    context.fillRect(0, 0, 100, 100);
-    context.drawImage(image, 0, 0, 100, 100);
+    context.fillRect(0, 0, canvas.width, 100);
+    context.drawImage(image, 0, 0, canvas.width, 100);
+    context.globalAlpha = 0.5;
+    const watermark = getWatermark();
+    const PADDING = 10;
+    let x = 0, y = 0;
+    while(y < canvas.height) {
+        context.drawImage(watermark, x, y);
+        x += watermark.width + PADDING;
+        if(x >= canvas.width) {
+            y += watermark.height + PADDING;
+            x = ((y / (watermark.height + PADDING)) % 2) * (-watermark.width / 2)
+        }
+    }
     res.send(canvas.toBuffer("image/png"))
 })
 
-app.listen(process.env.PORT, () => {
-    console.log("listening on port", process.env.PORT)
+const PORT = process.env.PORT || 80;
+
+app.listen(PORT, () => {
+    console.log("listening on port", PORT)
 })
