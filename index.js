@@ -7,6 +7,7 @@ app.get("/", (_, res) => {
     res.header("Content-Type", "image/png");
     const canvas = createCanvas(100, 100);
     const context = canvas.getContext("2d");
+    context.fillStyle = "red";
     context.fillRect(0, 0, 100, 100);
     res.send(canvas.toBuffer("image/png"))
 })
