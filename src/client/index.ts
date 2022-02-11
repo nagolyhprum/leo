@@ -12,7 +12,8 @@ import {
     leonarto,
     margin,
     padding,
-    shadow
+    shadow,
+    round
 } from "./api"
 
 export const main = async (endpoint = "/api") => {
@@ -55,6 +56,7 @@ export const main = async (endpoint = "/api") => {
                             bottom : 8,
                             left : 8
                         }),
+                        round(7 + 8),
                         background("orange"),
                         color("white"),
                         size(14),
