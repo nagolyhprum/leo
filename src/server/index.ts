@@ -1,7 +1,14 @@
+import { api } from "./api";
+
 const express = require("express");
 const { createCanvas, loadImage } = require("canvas");
+const path = require("path")
 
 const app = express();
+
+app.use(express.json())
+
+app.use(express.static(path.join(__dirname, "..", "client")))
 
 const svg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Layer_1" x="0px" y="0px" viewBox="0 0 100 100" enable-background="new 0 0 100 100" xml:space="preserve" height="100px" width="100px">
 <g>
@@ -31,7 +38,12 @@ const getWatermark = () => {
     return canvas;
 }
 
-app.get("/", async (_, res) => {
+app.post("/api", async (req, res) => {
+    res.header("Content-Type", "image/png");
+    res.send(await api(req.body, 1, 12))
+})
+
+app.get("/api", async (_, res) => {
     const image = await loadImage(svg);
     res.header("Content-Type", "image/png");
     const canvas = createCanvas(100, 100);

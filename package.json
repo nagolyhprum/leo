@@ -4,8 +4,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "npm run build:server && npm run build:client",
+    "build:server": "parcel build ./src/server/index.ts --no-cache --target node --out-dir ./dist/server",
+    "build:client": "parcel build ./src/client/index.html --no-cache --target browser --out-dir ./dist/client",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js"
+    "start": "node dist/server/index.js",
+    "dev": "npm run dev:server & npm run dev:client & npm run dev:nodemon",
+    "dev:nodemon": "nodemon dist/server/index.js",
+    "dev:server": "parcel watch ./src/server/index.ts --no-cache --target node --out-dir ./dist/server",
+    "dev:client": "parcel watch ./src/client/index.html --no-cache --target browser --out-dir ./dist/client"
   },
   "repository": {
     "type": "git",
@@ -20,5 +27,9 @@
   "dependencies": {
     "canvas": "^2.9.0",
     "express": "^4.17.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15",
+    "parcel-bundler": "^1.12.5"
   }
 }
