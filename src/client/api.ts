@@ -1,6 +1,7 @@
+import fetch from "cross-fetch"
+
 export const MATCH = -1;
 export const WRAP = -2;
-export const MATCH_WRAP = -3;
 
 const handleProp = (child : Component, prop : ((config : ComponentConfig) => Component) | string) => {
   if (typeof prop === "string") {
@@ -66,16 +67,36 @@ export const clip = setter("clip");
 export const wrap = setter("wrap");
 export const scale = setter("scale");
 
-export const root = (
-  component : (config : ComponentConfig) => Component,
-  width : number,
-  height : number
-) => {
-  return component({
-    parent : {
-      height,
-      width,
-      type: "root"
-    } as Component
-  })
+export const leonarto = (config : {
+  endpoint : string
+}) => {
+  return {
+    canvas : async (
+      component : (config : ComponentConfig) => Component,
+      width : number,
+      height : number
+    ) => {
+      const root = component({
+        parent : {
+          height,
+          width,
+          type: "root"
+        } as Component
+    })
+
+    const response = await fetch(config.endpoint, {
+      method : "POST",
+      headers : {
+          "Content-Type" : "application/json; charset=utf-8"
+      },
+      body : JSON.stringify(root, (key, value) => key === "parent" ? undefined : value)
+    })
+    return {
+      url : async () => URL.createObjectURL(await response.blob()),
+      arrayBuffer : async () => await response.arrayBuffer(),
+      blob : async () => await response.blob(),
+      buffer : async () => Buffer.from(await response.arrayBuffer())
+    }
+  }
+}
 }

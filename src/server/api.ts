@@ -1,5 +1,5 @@
 import { createCanvas } from "canvas";
-import { MATCH, MATCH_WRAP, WRAP } from "../client/api";
+import { MATCH, WRAP } from "../client/api";
 
 export const api = async (    
     root : Component,
@@ -77,7 +77,7 @@ export const api = async (
         return otherwise
       }
       
-      const draw = (element : Component, images : Record<string, HTMLImageElement>) : Component[] => {
+      const draw = (element : Component, images : Record<string, HTMLImageElement>) => {
         context.save()
         if(element.scale) {
           context.scale(element.scale.x, element.scale.y)
@@ -189,9 +189,9 @@ export const api = async (
         }
       }
       
-      const measure = (component : Component) => {
-        measureComponentWidth(component, false)
-        measureComponentHeight(component, false)
+      const measure = (component : Component, images : Record<string, HTMLImageElement>) => {
+        measureComponentWidth(component, images, false)
+        measureComponentHeight(component, images, false)
       }
       
       const dependsOnParent = (component : Component, dimension : "width" | "height") : component is Component => {
@@ -202,7 +202,7 @@ export const api = async (
           (0 < component[dimension] && component[dimension] < 1)
       }
       
-      const dependsOnChild = (component : Component | null, dimension : "width" | "height") : component is Component => {
+      const dependsOnChild = (component : Component | undefined, dimension : "width" | "height") : component is Component => {
         return !!component && (component[dimension] === WRAP || component.type === "row" || component.type === "column")
       }
       
@@ -210,20 +210,21 @@ export const api = async (
         return component.parent?.children?.some(it => it[dimension] === MATCH) ?? false
       }
       
-      const measureImage = (component : Component, dimension : "width" | "height") : number => {
+      const measureImage = (component : Component, dimension : "width" | "height", images : Record<string, HTMLImageElement>) : number => {
         if(component.source) {
+          const image = images[component.source]
           const other = OTHER[dimension]
           if(component[dimension] === WRAP) {
             const value = component[other]
             const available = (component.parent?.coords[other] ?? 0) - (getSpacing(component.parent?.padding, 0)[other])
             if(value === WRAP) {
-              return component.source[dimension]
+              return image[dimension]
             } else if(value === MATCH) {
-              return (component.source[dimension] * (available / component.source[other])) / ratio
+              return (image[dimension] * (available / image[other])) / ratio
             } else if(0 < value && value < 1) {
-              return (component.source[dimension] * (available * value / component.source[other])) / ratio
+              return (image[dimension] * (available * value / image[other])) / ratio
             } else {
-              return (component.source[dimension] * (value / component.source[other]))
+              return (image[dimension] * (value / image[other]))
             }
           }
         }
@@ -247,10 +248,10 @@ export const api = async (
         }
       }
     
-    const measureComponentWidth = (component : Component, force : boolean) : boolean => {
+    const measureComponentWidth = (component : Component, images : Record<string, HTMLImageElement>, force : boolean) : boolean => {
         let width = component.width
         if(component.source) {
-          width = measureImage(component, "width")
+          width = measureImage(component, "width", images)
         }
         if(width === WRAP) {    
           if(component.text instanceof Array) {
@@ -309,19 +310,19 @@ export const api = async (
           if(component.coords.width !== width) {
             component.coords.width = width
             if(component.text) {
-              measureComponentHeight(component, true)
+              measureComponentHeight(component, images, true)
             }
             if(dependsOnChild(component.parent, "width")) {
-              measureComponentWidth(component.parent, true)
+              measureComponentWidth(component.parent, images, true)
             }
             if(dependsOnSiblings(component, "width")) {
               (component.parent?.children ?? []).forEach(child => {
-                measureComponentWidth(child, true)
+                measureComponentWidth(child, images, true)
               })
             }
             component.children?.forEach((child) => {
               if(dependsOnParent(child, "width")) {
-                measureComponentWidth(child, true)
+                measureComponentWidth(child, images, true)
               }
             })
           }
@@ -376,12 +377,12 @@ export const api = async (
         return false
       }
       
-      const measureComponentHeight = (component : Component, force : boolean) : boolean => {
+      const measureComponentHeight = (component : Component, images : Record<string, HTMLImageElement>, force : boolean) : boolean => {
         let height = component.height
         if(component.source) {
-          height = measureImage(component, "height")
+          height = measureImage(component, "height", images)
         }
-        if(height === WRAP || height === MATCH_WRAP) {
+        if(height === WRAP) {
           if(component.text instanceof Array) {
             const text = component.text
             const fontSize = (component.size ?? defaultFontSize) * ratio
@@ -468,9 +469,6 @@ export const api = async (
             }, 0)
             height = max
           }
-          if(component.height === MATCH_WRAP) {
-            height = Math.max(component.parent?.coords.height ?? 0, height)
-          }
         } else if(height === MATCH) {
           if(component.parent?.type === "column") {
             const start = component.parent.coords.height - getSpacing(component.parent.padding, 0).height
@@ -502,16 +500,16 @@ export const api = async (
           if(component.coords.height !== height) {
             component.coords.height = height
             if(dependsOnChild(component.parent, "height")) {
-              measureComponentHeight(component.parent, true)
+              measureComponentHeight(component.parent, images, true)
             }
             if(dependsOnSiblings(component, "height")) {
               (component.parent?.children ?? []).forEach(child => {
-                measureComponentHeight(child, true)
+                measureComponentHeight(child, images, true)
               })
             }
             component.children?.forEach((child) => {
               if(dependsOnParent(child, "height")) {
-                measureComponentHeight(child, true)
+                measureComponentHeight(child, images, true)
               }
             })
           }
@@ -583,7 +581,7 @@ export const api = async (
                 context.font = `${isBold ? "italic bold " : ""} ${node.size}px sans-serif`
                 return {
                     text : item.split(/\s+/).reduce((text, item) => {
-                        return [].concat(text, [{
+                        return text.concat([{
                             text : item,
                             x : 0,
                             y : 0,
@@ -595,13 +593,19 @@ export const api = async (
                 }
             }, {
                 isBold : false,
-                text : []
+                text : [] as Array<{
+                  text : string
+                  x : number
+                  y : number
+                  isBold : boolean
+                  width : number
+                }>
             })
             node.text = text;
         }
     })
 
-    eachNode(root, node => measure(node))
+    eachNode(root, node => measure(node, {}))
 
     canvas.width = root.coords.width;
     canvas.height = root.coords.height;

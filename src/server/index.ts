@@ -1,4 +1,6 @@
 import { api } from "./api";
+import { Request, Response } from 'express'
+import { Server } from 'http'
 
 const express = require("express");
 const { createCanvas, loadImage } = require("canvas");
@@ -38,12 +40,12 @@ const getWatermark = () => {
     return canvas;
 }
 
-app.post("/api", async (req, res) => {
+app.post("/api", async (req : Request, res : Response) => {
     res.header("Content-Type", "image/png");
     res.send(await api(req.body, 1, 12))
 })
 
-app.get("/api", async (_, res) => {
+app.get("/api", async (_ : Request, res : Response) => {
     const image = await loadImage(svg);
     res.header("Content-Type", "image/png");
     const canvas = createCanvas(100, 100);
@@ -69,6 +71,6 @@ app.get("/api", async (_, res) => {
 
 const PORT = process.env.PORT || 80;
 
-app.listen(PORT, () => {
+export const server = app.listen(PORT, () => {
     console.log("listening on port", PORT)
-})
+}) as Server
