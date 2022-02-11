@@ -9,7 +9,10 @@ import {
     color,
     column,
     align,
-    leonarto
+    leonarto,
+    margin,
+    padding,
+    shadow
 } from "./api"
 
 export const main = async (endpoint = "/api") => {
@@ -31,7 +34,7 @@ export const main = async (endpoint = "/api") => {
                         align("center"),
                         size(32),
                         color("white"),
-                        "Goodbye Cruel World"
+                        "Goodbye **Cruel** World"
                     ]),
                     text(MATCH, WRAP, [
                         background("pink"),
@@ -41,6 +44,24 @@ export const main = async (endpoint = "/api") => {
                         "Goodbye Cruel World, Goodbye Cruel World"
                     ])
                 ]), 
+                column(MATCH, WRAP, [
+                    background("purple"),
+                    margin(16),
+                    padding(32),
+                    text(MATCH, WRAP, [
+                        padding({
+                            top : 8,
+                            right : 8,
+                            bottom : 8,
+                            left : 8
+                        }),
+                        background("orange"),
+                        color("white"),
+                        size(14),
+                        "TESTING 123",
+                        shadow(true)
+                    ])
+                ])
             ]),
             640, 
             480
