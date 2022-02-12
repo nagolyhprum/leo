@@ -1,38 +1,38 @@
-import fetch from "cross-fetch"
+import fetch from "cross-fetch";
 
 export const MATCH = -1;
 export const WRAP = -2;
 
 const handleProp = (child : Component, prop : ((config : ComponentConfig) => Component) | string) => {
-  if (typeof prop === "string") {
-    if ("children" in child) {
-      throw new Error("a component can only contain one type of child");
-    }
-    child.text = prop
-    return child
-  }
-  return prop({
-    parent: child
-  });
+	if (typeof prop === "string") {
+		if ("children" in child) {
+			throw new Error("a component can only contain one type of child");
+		}
+		child.text = prop;
+		return child;
+	}
+	return prop({
+		parent: child
+	});
 };
 const tag = (type : ComponentType) => (
-  width : number,
-  height : number,
-  props : Array<((config : ComponentConfig) => Component) | string>
+	width : number,
+	height : number,
+	props : Array<((config : ComponentConfig) => Component) | string>
 ) => ({ parent } : ComponentConfig) => {
-  if ("text" in parent) {
-    throw new Error("a component can only contain one type of child");
-  }
-  const child = props.reduce(handleProp, <Component>{
-    type,
-    width,
-    height,
-    parent
-  });
-  const children = parent.children ?? [];
-  parent.children = children;
-  children.push(child)
-  return parent
+	if ("text" in parent) {
+		throw new Error("a component can only contain one type of child");
+	}
+	const child = props.reduce(handleProp, <Component>{
+		type,
+		width,
+		height,
+		parent
+	});
+	const children = parent.children ?? [];
+	parent.children = children;
+	children.push(child);
+	return parent;
 };
 // TAGS
 export const row = tag("row");
@@ -41,9 +41,9 @@ export const stack = tag("stack");
 export const text = tag("text");
 export const image = tag("image");
 const setter = <K extends keyof Component>(name : K) => (value : Component[K]) => ({ parent } : ComponentConfig) => {
-  parent[name] = value
-  return parent
-}
+	parent[name] = value;
+	return parent;
+};
 // PROPS
 export const color = setter("color");
 export const background = setter("background");
@@ -68,33 +68,33 @@ export const scale = setter("scale");
 export const leonarto = (config : {
   endpoint : string
 }) => {
-  return {
-    canvas : async (
-      component : (config : ComponentConfig) => Component,
-      width : number,
-      height : number
-    ) => {
-      const root = component({
-        parent : {
-          height,
-          width,
-          type: "root"
-        } as Component
-    })
+	return {
+		canvas : async (
+			component : (config : ComponentConfig) => Component,
+			width : number,
+			height : number
+		) => {
+			const root = component({
+				parent : {
+					height,
+					width,
+					type: "root"
+				} as Component
+			});
 
-    const response = await fetch(config.endpoint, {
-      method : "POST",
-      headers : {
-          "Content-Type" : "application/json; charset=utf-8"
-      },
-      body : JSON.stringify(root, (key, value) => key === "parent" ? undefined : value)
-    })
-    return {
-      url : async () => URL.createObjectURL(await response.blob()),
-      arrayBuffer : async () => await response.arrayBuffer(),
-      blob : async () => await response.blob(),
-      buffer : async () => Buffer.from(await response.arrayBuffer())
-    }
-  }
-}
-}
+			const response = await fetch(config.endpoint, {
+				method : "POST",
+				headers : {
+					"Content-Type" : "application/json; charset=utf-8"
+				},
+				body : JSON.stringify(root, (key, value) => key === "parent" ? undefined : value)
+			});
+			return {
+				url : async () => URL.createObjectURL(await response.blob()),
+				arrayBuffer : async () => await response.arrayBuffer(),
+				blob : async () => await response.blob(),
+				buffer : async () => Buffer.from(await response.arrayBuffer())
+			};
+		}
+	};
+};

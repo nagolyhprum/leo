@@ -1,19 +1,18 @@
 import { api } from "./api";
-import { Request, Response } from 'express'
-import { Server } from 'http'
+import { Request, Response } from "express";
+import { Server } from "http";
 
-const express = require("express");
-const { createCanvas, loadImage } = require("canvas");
-const path = require("path")
+import express from "express";
+import path from "path";
 
 const app = express();
 
-app.use(express.json())
+app.use(express.json());
 
-app.use(express.static(path.join(__dirname, "..", "client")))
+app.use(express.static(path.join(__dirname, "..", "client")));
 
 app.get("/basketball.svg", (_ : Request, res : Response) => {
-    res.send(`
+	res.send(`
         <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Layer_1" x="0px" y="0px" viewBox="0 0 100 100" enable-background="new 0 0 100 100" xml:space="preserve" height="100px" width="100px">
             <path d="M28.1,36.6c4.6,1.9,12.2,1.6,20.9,1.1c8.9-0.4,19-0.9,28.9,0.9c6.3,1.2,11.9,3.1,16.8,6c-1.5-12.2-7.9-23.7-18.6-31.3   c-4.9-0.2-9.9,0.3-14.8,1.4C47.8,17.9,36.2,25.6,28.1,36.6z"/>
             <path d="M70.3,9.8C57.5,3.4,42.8,3.6,30.5,9.5c-3,6-8.4,19.6-5.3,24.9c8.6-11.7,20.9-19.8,35.2-23.1C63.7,10.5,67,10,70.3,9.8z"/>
@@ -24,8 +23,8 @@ app.get("/basketball.svg", (_ : Request, res : Response) => {
             <path d="M26.2,88.2c3.3,2,6.7,3.6,10.2,4.7c-3.5-6.2-6.3-12.6-8.8-18.5c-3.1-7.2-5.8-13.5-9-17.2c-1.9,8-2,16.4-0.3,24.7   C20.6,84.2,23.2,86.3,26.2,88.2z"/>
             <path d="M30.9,73c2.9,6.8,6.1,14.4,10.5,21.2c15.6,3,32-2.3,42.6-14.6C67.7,76,52.2,69.6,37.9,60.7C32,57,26.5,53,21.3,48.6   c-0.6,1.5-1.2,3-1.7,4.6C24.1,57.1,27.3,64.5,30.9,73z"/>
         </svg>
-    `)
-})
+    `);
+});
 
 // const getWatermark = () => {
 //     const text = "watermark";
@@ -43,9 +42,9 @@ app.get("/basketball.svg", (_ : Request, res : Response) => {
 // }
 
 app.post("/api", async (req : Request, res : Response) => {
-    res.header("Content-Type", "image/png");
-    res.send(await api(req.body, 1, 12))
-})
+	res.header("Content-Type", "image/png");
+	res.send(await api(req.body, 1, 12));
+});
 
 // app.get("/api", async (_ : Request, res : Response) => {
 //     const image = await loadImage(svg);
@@ -74,5 +73,5 @@ app.post("/api", async (req : Request, res : Response) => {
 const PORT = process.env.PORT || 80;
 
 export const server = app.listen(PORT, () => {
-    console.log("listening on port", PORT)
-}) as Server
+	console.log("listening on port", PORT);
+}) as Server;
