@@ -1,5 +1,5 @@
 import { createCanvas, loadImage } from "canvas";
-import { margin, MATCH, WRAP } from "../client/api";
+import { margin, MATCH, padding, WRAP } from "../client/api";
 
 export const api = async (    
     root : Component,
@@ -82,7 +82,7 @@ export const api = async (
         if(element.scale) {
           context.scale(element.scale.x, element.scale.y)
         }
-        let alpha = element.opacity ?? context.globalAlpha
+        const alpha = element.opacity ?? context.globalAlpha
         if(alpha === 0) {
           context.restore()
           return []
@@ -394,21 +394,23 @@ export const api = async (
             })
           }
           if(component.type === "row") {
-            let space = (component.children ?? []).reduce((size, child) => size + child.coords.width + getSpacing(child.margin, 0).width, 0);
             (component.children ?? []).forEach((child, index, children) => {
               if(index) {
                 const prev = children[index - 1]
                 child.coords.x = prev.coords.x + prev.coords.width + getSpacing(prev.margin, 0).right + getSpacing(child.margin, 0).left
               } else {
-                switch(component.crossAxisAlignment) {
+                const space = children.reduce((size, child) => size + child.coords.width + getSpacing(child.margin, 0).width, 0)
+                const axis = component.crossAxisAlignment || "start"
+                switch(axis) {
                   case "start":
                     child.coords.x = getSpacing(component.padding, 0).left + getSpacing(child.margin, 0).left
                     break;
                   case "center":
-                    child.coords.x = component.coords.width / 2 - space / 2
+                    const padding = getSpacing(component.padding, 0)
+                    child.coords.x = component.coords.width / 2 - space / 2 + padding.left
                     break;
                   case "end":
-                    child.coords.x = component.coords.width - space + getSpacing(component.padding, 0).right + getSpacing(child.margin, 0).left
+                    child.coords.x = component.coords.width - space - getSpacing(component.padding, 0).right + getSpacing(child.margin, 0).left
                     break;
                 }
               }
@@ -421,10 +423,11 @@ export const api = async (
                 component.coords.x = getSpacing(component.margin, 0).left + getSpacing(component.parent.padding, 0).left;
                 break;
               case "center":
-                component.coords.x = component.parent.coords.width / 2 - component.coords.width / 2
+                const padding = getSpacing(component.padding, 0)
+                component.coords.x = component.parent.coords.width / 2 - component.coords.width / 2 - padding.right + padding.left
                 break;
               case "end":
-                component.coords.x = component.parent.coords.width - component.coords.width
+                component.coords.x = component.parent.coords.width - component.coords.width - getSpacing(component.margin, 0).right - getSpacing(component.parent.padding, 0).right;
                 break;
             }
           }
@@ -597,7 +600,20 @@ export const api = async (
                 const prev = children[index - 1]
                 child.coords.y = prev.coords.y + prev.coords.height + getSpacing(prev.margin, 0).bottom + getSpacing(child.margin, 0).top
               } else {
-                child.coords.y = getSpacing(component.padding, 0).top + getSpacing(child.margin, 0).top
+                const space = children.reduce((size, child) => size + child.coords.height + getSpacing(child.margin, 0).height, 0)
+                const axis = component.crossAxisAlignment || "start";
+                switch(axis) {
+                  case "start":
+                    child.coords.y = getSpacing(component.padding, 0).top + getSpacing(child.margin, 0).top
+                    break;
+                  case "center":
+                    const padding = getSpacing(component.padding, 0)
+                    child.coords.y = component.coords.height / 2 - space / 2 + padding.top
+                    break;
+                  case "end":
+                    child.coords.y = component.coords.height - space - getSpacing(component.padding, 0).bottom + getSpacing(child.margin, 0).top
+                    break;
+                }
               }
             })
           }
@@ -608,10 +624,11 @@ export const api = async (
                 component.coords.y = getSpacing(component.margin, 0).top + getSpacing(component.parent.padding, 0).top;
                 break;
               case "center":
-                component.coords.y = component.parent.coords.height / 2 - component.coords.height / 2
+                const padding = getSpacing(component.padding, 0)
+                component.coords.y = component.parent.coords.height / 2 - component.coords.height / 2 - padding.bottom + padding.top
                 break;
               case "end":
-                component.coords.y = component.parent.coords.height - component.coords.height - getSpacing(component.margin, 0).bottom + getSpacing(component.parent.padding, 0).bottom
+                component.coords.y = component.parent.coords.height - component.coords.height - getSpacing(component.margin, 0).bottom - getSpacing(component.parent.padding, 0).bottom
                 break;
             }
           }

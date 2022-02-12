@@ -22,8 +22,6 @@ import {
     crossAxisAlignment
 } from "./api"
 
-const Basketball = "/basketball.svg"
-
 /*
 
             column(MATCH, MATCH, [
@@ -95,42 +93,86 @@ const Basketball = "/basketball.svg"
 
 export const main = async (domain = location.protocol + "//" + location.host) => {
     try {
+        const Basketball = `${domain}/basketball.svg`
+        const children = ["A", "**B**", "C"].map(it => text(WRAP, WRAP, [
+            size(it === "**B**" ? 16 : 12),
+            padding([4, 6, 8, 10]),
+            margin({
+                top : 12,
+                right : 14,
+                bottom : 16,
+                left: 18
+            }),
+            it,
+            color("black")
+        ]))
         const result = await leonarto({
             endpoint : `${domain}/api`
         }).canvas(
             column(MATCH, MATCH, [
-                row(MATCH, 75, [
-                    mainAxisAlignment("start"),
-                    crossAxisAlignment("center"),
-                    ...["A", "B", "C"].map(it => text(WRAP, WRAP, [
-                        size(12),
-                        padding([4, 6, 8, 12]),
-                        margin([14, 16, 18, 20]),
-                        it,
-                        color("black")
-                    ]))
+                padding([10, 12, 14, 16]),
+                background("white"),
+                column(MATCH, 300, [
+                    row(MATCH, MATCH, [
+                        padding([10, 12, 14, 16]),
+                        mainAxisAlignment("start"),
+                        crossAxisAlignment("center"),
+                        ...children
+                    ]),
+                    row(MATCH, MATCH, [
+                        padding([10, 12, 14, 16]),
+                        mainAxisAlignment("center"),
+                        crossAxisAlignment("end"),
+                        ...children
+                    ]),
+                    row(MATCH, MATCH, [
+                        padding([10, 12, 14, 16]),
+                        mainAxisAlignment("end"),
+                        crossAxisAlignment("start"),
+                        ...children
+                    ]),
                 ]),
-                row(MATCH, 75, [
-                    mainAxisAlignment("center"),
-                    crossAxisAlignment("end"),
-                    ...["A", "B", "C"].map(it => text(WRAP, WRAP, [
-                        size(12),
-                        padding([4, 6, 8, 12]),
-                        margin([14, 16, 18, 20]),
-                        it,
-                        color("black")
-                    ]))
+                row(MATCH, 200, [
+                    column(MATCH, MATCH, [
+                        padding([10, 12, 14, 16]),
+                        mainAxisAlignment("start"),
+                        crossAxisAlignment("center"),
+                        ...children
+                    ]),
+                    column(MATCH, MATCH, [
+                        padding([10, 12, 14, 16]),
+                        mainAxisAlignment("center"),
+                        crossAxisAlignment("end"),
+                        ...children
+                    ]),
+                    column(MATCH, MATCH, [
+                        padding([10, 12, 14, 16]),
+                        mainAxisAlignment("end"),
+                        crossAxisAlignment("start"),
+                        ...children
+                    ]),
                 ]),
-                row(MATCH, 75, [
-                    mainAxisAlignment("end"),
-                    crossAxisAlignment("start"),
-                    ...["A", "B", "C"].map(it => text(WRAP, WRAP, [
-                        size(12),
-                        padding([4, 6, 8, 12]),
-                        margin([14, 16, 18, 20]),
-                        it,
-                        color("black")
-                    ]))
+                row(MATCH, MATCH, [
+                    image(WRAP, MATCH, [
+                        source(Basketball)
+                    ]),
+                    image(100, WRAP, [
+                        source(Basketball)
+                    ]),
+                    image(WRAP, 100, [
+                        source(Basketball)
+                    ]),
+                    image(WRAP, WRAP, [
+                        source(Basketball)
+                    ]),
+                    column(40, 40, [
+                        round(20),
+                        background("black")
+                    ]),
+                    column(40, 40, [
+                        round(10),
+                        background("black")
+                    ])
                 ])
             ]),
             640, 
