@@ -1,5 +1,5 @@
-import { createCanvas } from "canvas";
-import { MATCH, WRAP } from "../client/api";
+import { createCanvas, loadImage } from "canvas";
+import { margin, MATCH, WRAP } from "../client/api";
 
 export const api = async (    
     root : Component,
@@ -102,6 +102,7 @@ export const api = async (
           context.shadowColor = 'transparent';    
         }
         const padding = getSpacing(element.padding, 0);
+        const margin = getSpacing(element.margin, 0);
         context.fillStyle = element.background ?? "transparent";
         // context.strokeStyle = "red";
         context.strokeStyle = "transparent";
@@ -177,14 +178,80 @@ export const api = async (
             context.fillText(text, x, y)
           })
         }
+        if(true) {
+          // PADDING
+          context.fillStyle = "rgba(0, 255, 0, 0.5)"
+          // TOP
+          context.fillRect(
+            0, 
+            0, 
+            element.coords.width, 
+            padding.top
+          )
+          // BOTTOM
+          context.fillRect(
+            0, 
+            element.coords.height - padding.bottom, 
+            element.coords.width, 
+            padding.bottom
+          )
+          // LEFT
+          context.fillRect(
+            0, 
+            padding.top, 
+            padding.left, 
+            element.coords.height - padding.top - padding.bottom
+          )
+          // RIGHT
+          context.fillRect(
+            element.coords.width - padding.right, 
+            padding.top, 
+            padding.right, 
+            element.coords.height - padding.top - padding.bottom
+          )
+          // MARGIN
+          context.fillStyle = "rgba(0, 0, 255, 0.5)"
+          // TOP
+          context.fillRect(
+            -margin.left,
+            -margin.top,
+            margin.left + margin.right + element.coords.width,
+            margin.top
+          )
+          // BOTTOM
+          context.fillRect(
+            -margin.left,
+            element.coords.height,
+            margin.left + margin.right + element.coords.width,
+            margin.bottom
+          )
+          // LEFT
+          context.fillRect(
+            -margin.left,
+            0,
+            margin.left,
+            element.coords.height
+          )
+          // LEFT
+          context.fillRect(
+            element.coords.width,
+            0,
+            margin.right,
+            element.coords.height
+          )
+          context.lineWidth = 2;
+          context.strokeStyle = "rgba(255, 0, 0, 0.5)"
+          context.setLineDash([2, 4]);
+          context.strokeRect(0, 0, element.coords.width, element.coords.height)
+        }
         context.restore()
       };
       
-      const eachNode = (root : Component, callback : (component : Component) => void) => {
+      const eachNode = async (root : Component, callback : (component : Component) => Promise<void>) => {
         const nodes = [root]
         let node;
         while(node = nodes.shift()) {
-          callback(node)
+          await callback(node)
           nodes.push(...(node.children || []))
         }
       }
@@ -327,12 +394,23 @@ export const api = async (
             })
           }
           if(component.type === "row") {
+            let space = (component.children ?? []).reduce((size, child) => size + child.coords.width + getSpacing(child.margin, 0).width, 0);
             (component.children ?? []).forEach((child, index, children) => {
               if(index) {
                 const prev = children[index - 1]
                 child.coords.x = prev.coords.x + prev.coords.width + getSpacing(prev.margin, 0).right + getSpacing(child.margin, 0).left
               } else {
-                child.coords.x = getSpacing(component.padding, 0).left + getSpacing(child.margin, 0).left
+                switch(component.crossAxisAlignment) {
+                  case "start":
+                    child.coords.x = getSpacing(component.padding, 0).left + getSpacing(child.margin, 0).left
+                    break;
+                  case "center":
+                    child.coords.x = component.coords.width / 2 - space / 2
+                    break;
+                  case "end":
+                    child.coords.x = component.coords.width - space + getSpacing(component.padding, 0).right + getSpacing(child.margin, 0).left
+                    break;
+                }
               }
             })
           }
@@ -533,7 +611,7 @@ export const api = async (
                 component.coords.y = component.parent.coords.height / 2 - component.coords.height / 2
                 break;
               case "end":
-                component.coords.y = component.parent.coords.height - component.coords.height
+                component.coords.y = component.parent.coords.height - component.coords.height - getSpacing(component.margin, 0).bottom + getSpacing(component.parent.padding, 0).bottom
                 break;
             }
           }
@@ -565,7 +643,9 @@ export const api = async (
       const canvas = createCanvas(0, 0)
       const context = canvas.getContext("2d")
 
-    eachNode(root, node => {
+    const images : Record<string, HTMLImageElement> = {};
+
+    await eachNode(root, async node => {
         node.coords = {
           x: 0,
           y: 0,
@@ -573,12 +653,13 @@ export const api = async (
           height: 0
         };
         (node.children ?? []).forEach(child => child.parent = node)
+        const fontSize = (node.size || defaultFontSize) * ratio
         if(typeof node.text === "string") {
             const { text } = node.text.split("**").reduce(({
                 isBold,
                 text
             }, item) => {
-                context.font = `${isBold ? "italic bold " : ""} ${node.size}px sans-serif`
+                context.font = `${isBold ? "italic bold " : ""} ${fontSize}px sans-serif`
                 return {
                     text : item.split(/\s+/).reduce((text, item) => {
                         return text.concat([{
@@ -603,16 +684,19 @@ export const api = async (
             })
             node.text = text;
         }
+        if(node.source) {
+          images[node.source] = (await loadImage(node.source)) as unknown as HTMLImageElement
+        }
     })
 
-    eachNode(root, node => measure(node, {}))
+    await eachNode(root, async node => measure(node, images))
 
     canvas.width = root.coords.width;
     canvas.height = root.coords.height;
 
     // console.log(JSON.stringify(root, (key, value) => key !== "parent" ? value : undefined, "\t"))
 
-    draw(root, {})
+    draw(root, images)
 
     return canvas.toBuffer("image/png")
 }

@@ -1,3 +1,8 @@
+declare module '*.svg' {
+  const content : string
+  export default content
+}
+
 type Alignment = "start" | "center" | "end"
 
 type ComponentType = "root" | "stack" | "image" | "column" | "row" | "text"

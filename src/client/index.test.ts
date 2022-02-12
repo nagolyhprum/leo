@@ -12,7 +12,7 @@ afterAll(() => {
 describe("api", () => {
     describe("main", () => {
         it("generates an image from the server", async () => {
-            const image = await main("http://localhost/api")
+            const image = await main("http://localhost")
             expect(image).toBeDefined()
             if(image) {
                 expect(await image.buffer()).toMatchImageSnapshot()

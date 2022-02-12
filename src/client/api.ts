@@ -10,12 +10,10 @@ const handleProp = (child : Component, prop : ((config : ComponentConfig) => Com
     }
     child.text = prop
     return child
-  } else if (typeof prop === "function") {
-    return prop({
-      parent: child
-    });
   }
-  throw new Error("unhandled prop");
+  return prop({
+    parent: child
+  });
 };
 const tag = (type : ComponentType) => (
   width : number,
