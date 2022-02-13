@@ -11,7 +11,7 @@ app.use(express.json());
 
 app.use(express.static(path.join(__dirname, "..", "client")));
 
-app.get("/basketball.svg", (_ : Request, res : Response) => {
+app.get("/basketball.svg", (_: Request, res: Response) => {
 	res.send(`
         <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Layer_1" x="0px" y="0px" viewBox="0 0 100 100" enable-background="new 0 0 100 100" xml:space="preserve" height="100px" width="100px">
             <path d="M28.1,36.6c4.6,1.9,12.2,1.6,20.9,1.1c8.9-0.4,19-0.9,28.9,0.9c6.3,1.2,11.9,3.1,16.8,6c-1.5-12.2-7.9-23.7-18.6-31.3   c-4.9-0.2-9.9,0.3-14.8,1.4C47.8,17.9,36.2,25.6,28.1,36.6z"/>
@@ -41,7 +41,7 @@ app.get("/basketball.svg", (_ : Request, res : Response) => {
 //     return canvas;
 // }
 
-app.post("/api", async (req : Request, res : Response) => {
+app.post("/api", async (req: Request, res: Response) => {
 	res.header("Content-Type", "image/png");
 	res.send(await api(req.body, 1, 12));
 });
@@ -70,7 +70,7 @@ app.post("/api", async (req : Request, res : Response) => {
 //     res.send(canvas.toBuffer("image/png"))
 // })
 
-const PORT = process.env.PORT || 80;
+const PORT = process.env.PORT || 8080;
 
 export const server = app.listen(PORT, () => {
 	console.log("listening on port", PORT);
