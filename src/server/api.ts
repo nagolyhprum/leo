@@ -156,12 +156,16 @@ export const api = async (
 			}
 		);
 		if (element.source) {
+			const width = element.coords.width - padding.width;
+			const height = element.coords.height - padding.height;
+			images[element.source].width = width;
+			images[element.source].width = height;
 			context.drawImage(
 				images[element.source],
 				padding.left,
 				padding.top,
-				element.coords.width - padding.width,
-				element.coords.height - padding.height
+				width,
+				height
 			);
 		}
 		context.shadowColor = "transparent";    

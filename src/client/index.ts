@@ -102,22 +102,15 @@ export const stackWithImages = (domain = location.protocol + "//" + location.hos
 	console.log({ Basketball });
 	return leonarto({
 		endpoint : `${domain}/api`
-	}).canvas(stack(MATCH, MATCH, [        
-		image(WRAP, MATCH, [
-			source(Basketball),
-			position({
-				top : 0,
-				left : 0
-			})
-		]),
-		image(100, WRAP, [
+	}).canvas(stack(MATCH, MATCH, [  
+		image(150, WRAP, [
 			source(Basketball),
 			position({
 				top : 8,
 				right : 16
 			})
 		]),
-		image(WRAP, 100, [
+		image(WRAP, 150, [
 			source(Basketball),
 			position({
 				bottom : .1,
