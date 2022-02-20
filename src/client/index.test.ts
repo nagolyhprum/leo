@@ -20,8 +20,8 @@ describe("api", () => {
 		const image = await columns(ENDPOINT);
 		expect(await image.buffer()).toMatchImageSnapshot();
 	});
-	// it("works for stack with images", async () => {
-	// 	const image = await stackWithImages(ENDPOINT);
-	// 	expect(await image.buffer()).toMatchImageSnapshot();
-	// });
+	it("works for stack with images", async () => {
+		const image = await stackWithImages(ENDPOINT);
+		expect(await image.buffer()).toMatchImageSnapshot();
+	});
 });

@@ -99,7 +99,6 @@ export const columns = (domain = location.protocol + "//" + location.host) => {
 
 export const stackWithImages = (domain = location.protocol + "//" + location.host) => {
 	const Basketball = `${domain}/basketball.svg`;
-	console.log({ Basketball });
 	return leonarto({
 		endpoint : `${domain}/api`
 	}).canvas(stack(MATCH, MATCH, [  
