@@ -152,12 +152,13 @@ export const stackWithImages = (domain = location.protocol + "//" + location.hos
 
 const main = async () => {
 	try {
+		const host = encodeURIComponent(`${location.protocol}//${location.hostname}${location.port ? `:${location.port}` : ""}`);
 		Array.from(document.querySelectorAll<HTMLImageElement & {
 			dataset : {
 				src : string
 			}
 		}>("img[data-src]")).forEach(img => {
-			img.src = img.dataset.src;
+			img.src = img.dataset.src.replace("${host}", host);
 		});
         document.querySelector<HTMLImageElement>("#columns")!.src = await (await columns()).url();
         document.querySelector<HTMLImageElement>("#rows")!.src = await (await rows()).url();
