@@ -748,7 +748,6 @@ export default async (req : NextApiRequest, res : NextApiResponse) => {
 		res.send(await api(root, 1, 12));
 		return;
 	} catch(e) {
-		console.log(e.mesage);
 		// DO NOTHING
 	}
 
@@ -821,9 +820,10 @@ export default async (req : NextApiRequest, res : NextApiResponse) => {
 			}
 		}
 	} catch(e) {
-		console.log(e.message);
+		res.status(400).send({
+			error : e.message
+		});
 	}
-	res.status(400).end();
 };
 
 // const getWatermark = () => {
