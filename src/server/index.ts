@@ -12,6 +12,7 @@ import webp from "webp-converter";
 
 import fs from "fs";
 
+// we need this folder in order to generate webp images
 fs.mkdir(path.join(__dirname, "..", "..", "node_modules", "webp-converter", "temp"), {
 	recursive : true
 }, () => {
@@ -104,10 +105,12 @@ app.get("/api", async (req: Request, res: Response) => {
 				const percent = Math.min(width / image.width, height / image.height);
 				const newWidth = image.width * percent;
 				const newHeight = image.height * percent;
+				canvas.width = newWidth;
+				canvas.height = newHeight;
 				context.drawImage(
 					image, 
-					width / 2 - newWidth / 2, 
-					height / 2 - newHeight / 2, 
+					0, 
+					0, 
 					newWidth, 
 					newHeight
 				);
