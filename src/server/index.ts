@@ -5,8 +5,18 @@ import { Server } from "http";
 import express from "express";
 import path from "path";
 
-import Bear from './bear.jpeg'
+import Bear from "./bear.jpeg";
 import { createCanvas, loadImage } from "canvas";
+
+import webp from "webp-converter";
+
+import fs from "fs";
+
+fs.mkdir(path.join(__dirname, "..", "..", "node_modules", "webp-converter", "temp"), {
+	recursive : true
+}, () => {
+	// DO NOTHING
+});
 
 const app = express();
 
@@ -15,8 +25,8 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "..", "client")));
 
 app.get("/bear.jpeg", (_, res) => {
-    res.sendFile(path.join(__dirname, Bear))
-})
+	res.sendFile(path.join(__dirname, Bear));
+});
 
 app.get("/basketball.svg", (_: Request, res: Response) => {
 	res.send(`
@@ -54,66 +64,76 @@ app.post("/api", async (req: Request, res: Response) => {
 });
 
 app.get("/api", async (req: Request, res: Response) => {
-    try {
-        const {
-            src,
-            size // cover, contain
-        } = req.query
-        let width = Number(req.query.width)
-        let height = Number(req.query.height)
-        if(typeof src === "string") {
-            const image = await loadImage(src);
-            if(!isNaN(width) && isNaN(height)) {
-                height = (width / image.width) * image.height;
-            }
-            if(isNaN(width) && !isNaN(height)) {
-                width = (height / image.height) * image.width;
-            }
-            if(isNaN(width) && isNaN(height)) {
-                width = image.width;
-                height = image.height;
-            }
-            const canvas = createCanvas(width, height);
-            const context = canvas.getContext("2d");
-            switch(size) {
-                case "cover": {
-                    const percent = Math.max(width / image.width, height / image.height);
-                    const newWidth = image.width * percent
-                    const newHeight = image.height * percent
-                    context.drawImage(
-                        image, 
-                        width / 2 - newWidth / 2, 
-                        height / 2 - newHeight / 2, 
-                        newWidth, 
-                        newHeight
-                    )
-                    break;
-                }
-                case "contain": {
-                    const percent = Math.min(width / image.width, height / image.height);
-                    const newWidth = image.width * percent
-                    const newHeight = image.height * percent
-                    context.drawImage(
-                        image, 
-                        width / 2 - newWidth / 2, 
-                        height / 2 - newHeight / 2, 
-                        newWidth, 
-                        newHeight
-                    )
-                    break;
-                }
-                default:
-                    context.drawImage(image, 0, 0, width, height)
-                    break;
-            }
-            res.header("Content-Type", "image/jpeg");
-            res.send(canvas.toBuffer("image/jpeg"))
-            return;
-        }
-    } catch(e) {
-        console.log(e)
-    }
-    res.status(400).end()
+	try {
+		const {
+			src,
+			type,
+			size // cover, contain
+		} = req.query;
+		let width = Number(req.query.width);
+		let height = Number(req.query.height);
+		if(typeof src === "string") {
+			const image = await loadImage(src);
+			if(!isNaN(width) && isNaN(height)) {
+				height = (width / image.width) * image.height;
+			}
+			if(isNaN(width) && !isNaN(height)) {
+				width = (height / image.height) * image.width;
+			}
+			if(isNaN(width) && isNaN(height)) {
+				width = image.width;
+				height = image.height;
+			}
+			const canvas = createCanvas(width, height);
+			const context = canvas.getContext("2d");
+			switch(size) {
+			case "cover": {
+				const percent = Math.max(width / image.width, height / image.height);
+				const newWidth = image.width * percent;
+				const newHeight = image.height * percent;
+				context.drawImage(
+					image, 
+					width / 2 - newWidth / 2, 
+					height / 2 - newHeight / 2, 
+					newWidth, 
+					newHeight
+				);
+				break;
+			}
+			case "contain": {
+				const percent = Math.min(width / image.width, height / image.height);
+				const newWidth = image.width * percent;
+				const newHeight = image.height * percent;
+				context.drawImage(
+					image, 
+					width / 2 - newWidth / 2, 
+					height / 2 - newHeight / 2, 
+					newWidth, 
+					newHeight
+				);
+				break;
+			}
+			default:
+				context.drawImage(image, 0, 0, width, height);
+				break;
+			}
+			if(typeof type === "string") {
+				if(["image/webp"].includes(type)) {
+					const image = await webp.buffer2webpbuffer(canvas.toBuffer("image/jpeg"), "jpg", "-q 80");
+					console.log({ image });
+					res.header("Content-Type", "image/webp");
+					res.send(image);
+				}
+			} else {
+				res.header("Content-Type", "image/jpeg");
+				res.send(canvas.toBuffer("image/jpeg"));
+			}
+			return;
+		}
+	} catch(e) {
+		console.log(e);
+	}
+	res.status(400).end();
 });
 
 // app.get("/api", async (_ : Request, res : Response) => {
