@@ -152,6 +152,13 @@ export const stackWithImages = (domain = location.protocol + "//" + location.hos
 
 const main = async () => {
 	try {
+		Array.from(document.querySelectorAll<HTMLImageElement & {
+			dataset : {
+				src : string
+			}
+		}>("img[data-src]")).forEach(img => {
+			img.src = img.dataset.src;
+		});
         document.querySelector<HTMLImageElement>("#columns")!.src = await (await columns()).url();
         document.querySelector<HTMLImageElement>("#rows")!.src = await (await rows()).url();
         document.querySelector<HTMLImageElement>("#stackWithImages")!.src = await (await stackWithImages()).url();
