@@ -1,5 +1,19 @@
+import { NextApiRequest, NextApiResponse } from "next";
+
 import { createCanvas, loadImage } from "canvas";
-import { MATCH, WRAP } from "../client/api";
+import { MATCH, WRAP } from "../../src/client/api";
+
+import webp from "webp-converter";
+
+import fs from "fs";
+import path from "path";
+
+// we need this folder in order to generate webp images
+fs.mkdir(path.join(__dirname, "..", "..", "node_modules", "webp-converter", "temp"), {
+	recursive : true
+}, () => {
+	// DO NOTHING
+});
 
 const debug = true;
 
@@ -725,3 +739,127 @@ export const api = async (
 
 	return canvas.toBuffer("image/png");
 };
+
+export default async (req : NextApiRequest, res : NextApiResponse) => {
+	const source = req.body || req.query;
+	try {
+		const root = JSON.parse(source.src);
+		res.setHeader("Content-Type", "image/png");
+		res.send(await api(root, 1, 12));
+		return;
+	} catch(e) {
+		console.log(e.mesage);
+		// DO NOTHING
+	}
+
+	try {
+		const {
+			src,
+			type,
+			size // cover, contain
+		} = source;
+		let width = Number(req.query.width);
+		let height = Number(req.query.height);
+		if(typeof src === "string") {
+			const image = await loadImage(src);
+			if(!isNaN(width) && isNaN(height)) {
+				height = (width / image.width) * image.height;
+			}
+			if(isNaN(width) && !isNaN(height)) {
+				width = (height / image.height) * image.width;
+			}
+			if(isNaN(width) && isNaN(height)) {
+				width = image.width;
+				height = image.height;
+			}
+			const canvas = createCanvas(width, height);
+			const context = canvas.getContext("2d");
+			switch(size) {
+			case "cover": {
+				const percent = Math.max(width / image.width, height / image.height);
+				const newWidth = image.width * percent;
+				const newHeight = image.height * percent;
+				context.drawImage(
+					image, 
+					width / 2 - newWidth / 2, 
+					height / 2 - newHeight / 2, 
+					newWidth, 
+					newHeight
+				);
+				break;
+			}
+			case "contain": {
+				const percent = Math.min(width / image.width, height / image.height);
+				const newWidth = image.width * percent;
+				const newHeight = image.height * percent;
+				canvas.width = newWidth;
+				canvas.height = newHeight;
+				context.drawImage(
+					image, 
+					0, 
+					0, 
+					newWidth, 
+					newHeight
+				);
+				break;
+			}
+			default:
+				context.drawImage(image, 0, 0, width, height);
+				break;
+			}
+			if(typeof type === "string") {
+				if(["image/webp"].includes(type)) {
+					const image = await webp.buffer2webpbuffer(canvas.toBuffer("image/jpeg"), "jpg", "-q 80");
+					res.setHeader("Content-Type", "image/webp");
+					res.send(image);
+					return;
+				}
+			} else {
+				res.setHeader("Content-Type", "image/jpeg");
+				res.send(canvas.toBuffer("image/jpeg"));
+				return;
+			}
+		}
+	} catch(e) {
+		console.log(e.message);
+	}
+	res.status(400).end();
+};
+
+// const getWatermark = () => {
+//     const text = "watermark";
+//     const font = 24;
+//     const canvas = createCanvas(1, font);
+//     const context = canvas.getContext("2d");
+//     context.font = `${font}px Times New Roman`;
+//     canvas.width = context.measureText(text).width;
+//     context.font = `${font}px Times New Roman`;
+//     context.textAlign = "start";
+//     context.textBaseline = "top";
+//     context.fillStyle = "white";
+//     context.fillText(text, 0, 0);
+//     return canvas;
+// }
+// app.get("/api", async (_ : Request, res : Response) => {
+//     const image = await loadImage(svg);
+//     res.header("Content-Type", "image/png");
+//     const canvas = createCanvas(100, 100);
+//     const context = canvas.getContext("2d");
+//     canvas.width = 300;
+//     context.fillStyle = "red";
+//     context.fillRect(0, 0, canvas.width, 100);
+//     context.drawImage(image, 0, 0, canvas.width, 100);
+//     context.globalAlpha = 0.5;
+//     const watermark = getWatermark();
+//     const PADDING = 10;
+//     let x = 0, y = 0;
+//     while(y < canvas.height) {
+//         context.drawImage(watermark, x, y);
+//         x += watermark.width + PADDING;
+//         if(x >= canvas.width) {
+//             y += watermark.height + PADDING;
+//             x = ((y / (watermark.height + PADDING)) % 2) * (-watermark.width / 2)
+//         }
+//     }
+//     res.send(canvas.toBuffer("image/png"))
+// })

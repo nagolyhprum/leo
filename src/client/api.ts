@@ -1,5 +1,3 @@
-import fetch from "cross-fetch";
-
 export const MATCH = -1;
 export const WRAP = -2;
 
@@ -69,7 +67,7 @@ export const leonarto = (config : {
   endpoint : string
 }) => {
 	return {
-		canvas : async (
+		canvas : (
 			component : (config : ComponentConfig) => Component,
 			width : number,
 			height : number
@@ -81,20 +79,7 @@ export const leonarto = (config : {
 					type: "root"
 				} as Component
 			});
-
-			const response = await fetch(config.endpoint, {
-				method : "POST",
-				headers : {
-					"Content-Type" : "application/json; charset=utf-8"
-				},
-				body : JSON.stringify(root, (key, value) => key === "parent" ? undefined : value)
-			});
-			return {
-				url : async () => URL.createObjectURL(await response.blob()),
-				arrayBuffer : async () => await response.arrayBuffer(),
-				blob : async () => await response.blob(),
-				buffer : async () => Buffer.from(await response.arrayBuffer())
-			};
+			return `${config.endpoint}?src=${encodeURIComponent(JSON.stringify(root, (key, value) => key === "parent" ? undefined : value))}`;
 		}
 	};
 };
