@@ -9,7 +9,7 @@ import fs from "fs";
 import path from "path";
 
 // we need this folder in order to generate webp images
-fs.mkdir(path.join(__dirname, "..", "..", "node_modules", "webp-converter", "temp"), {
+fs.mkdir(path.join("node_modules", "webp-converter", "temp"), {
 	recursive : true
 }, () => {
 	// DO NOTHING
