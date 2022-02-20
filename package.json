@@ -28,6 +28,9 @@
     "cross-fetch": "^3.1.5",
     "next": "^12.1.0",
     "next-absolute-url": "^1.2.2",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "redis": "^4.0.3",
     "webp-converter": "^2.3.3"
   },
   "devDependencies": {

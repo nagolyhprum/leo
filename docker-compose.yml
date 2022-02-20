@@ -1,0 +1,14 @@
+version: "3.9"
+services:
+  web:
+    build: .
+    volumes:
+      - ./src:/home/node/src
+      - ./pages:/home/node/pages
+      - ./public:/home/node/public
+    environment:
+      - REDIS=redis://redis:6379
+    ports:
+      - 80:3000
+  redis:
+    image: redis

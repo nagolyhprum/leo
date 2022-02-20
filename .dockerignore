@@ -1,0 +1,6 @@
+__tests__
+.github
+.next
+.vscode
+coverage
+node_modules

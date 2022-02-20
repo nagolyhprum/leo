@@ -8,6 +8,14 @@ import webp from "webp-converter";
 import fs from "fs";
 import path from "path";
 
+import { createClient } from "redis";
+
+const client = createClient({
+	url : process.env.REDIS
+});
+
+client.on("error", (err) => console.log("Redis Client Error", err));
+
 // we need this folder in order to generate webp images
 fs.mkdir(path.join("node_modules", "webp-converter", "temp"), {
 	recursive : true
@@ -740,90 +748,117 @@ export const api = async (
 	return canvas.toBuffer("image/png");
 };
 
-export default async (req : NextApiRequest, res : NextApiResponse) => {
-	const source = req.body || req.query;
+const getImage = async ({
+	src,
+	width,
+	height,
+	size,
+	type
+} : {
+    src : string
+    width : number
+    height : number
+    size : string
+    type : string
+}) : Promise<Buffer> => {
 	try {
-		const root = JSON.parse(source.src);
-		res.setHeader("Content-Type", "image/png");
-		res.send(await api(root, 1, 12));
-		return;
+		const root = JSON.parse(src);
+		return api(root, 1, 12);
 	} catch(e) {
 		// DO NOTHING
 	}
+	if(typeof src === "string") {
+		const image = await loadImage(src);
+		if(!isNaN(width) && isNaN(height)) {
+			height = (width / image.width) * image.height;
+		}
+		if(isNaN(width) && !isNaN(height)) {
+			width = (height / image.height) * image.width;
+		}
+		if(isNaN(width) && isNaN(height)) {
+			width = image.width;
+			height = image.height;
+		}
+		const canvas = createCanvas(width, height);
+		const context = canvas.getContext("2d");
+		switch(size) {
+		case "cover": {
+			const percent = Math.max(width / image.width, height / image.height);
+			const newWidth = image.width * percent;
+			const newHeight = image.height * percent;
+			context.drawImage(
+				image, 
+				width / 2 - newWidth / 2, 
+				height / 2 - newHeight / 2, 
+				newWidth, 
+				newHeight
+			);
+			break;
+		}
+		case "contain": {
+			const percent = Math.min(width / image.width, height / image.height);
+			const newWidth = image.width * percent;
+			const newHeight = image.height * percent;
+			canvas.width = newWidth;
+			canvas.height = newHeight;
+			context.drawImage(
+				image, 
+				0, 
+				0, 
+				newWidth, 
+				newHeight
+			);
+			break;
+		}
+		default:
+			context.drawImage(image, 0, 0, width, height);
+			break;
+		}
+		if(typeof type === "string") {
+			if(["image/webp"].includes(type)) {
+				const image = await webp.buffer2webpbuffer(canvas.toBuffer("image/jpeg"), "jpg", "-q 80");
+				return image;
+			}
+		} else {
+			return canvas.toBuffer("image/jpeg");
+		}
+	}
+};
 
+export default async (req : NextApiRequest, res : NextApiResponse) => {
 	try {
+		await client.connect();
+		const source = req.body || req.query;
 		const {
 			src,
-			type,
+			type = "image/jpeg",
 			size // cover, contain
 		} = source;
-		let width = Number(req.query.width);
-		let height = Number(req.query.height);
-		if(typeof src === "string") {
-			const image = await loadImage(src);
-			if(!isNaN(width) && isNaN(height)) {
-				height = (width / image.width) * image.height;
-			}
-			if(isNaN(width) && !isNaN(height)) {
-				width = (height / image.height) * image.width;
-			}
-			if(isNaN(width) && isNaN(height)) {
-				width = image.width;
-				height = image.height;
-			}
-			const canvas = createCanvas(width, height);
-			const context = canvas.getContext("2d");
-			switch(size) {
-			case "cover": {
-				const percent = Math.max(width / image.width, height / image.height);
-				const newWidth = image.width * percent;
-				const newHeight = image.height * percent;
-				context.drawImage(
-					image, 
-					width / 2 - newWidth / 2, 
-					height / 2 - newHeight / 2, 
-					newWidth, 
-					newHeight
-				);
-				break;
-			}
-			case "contain": {
-				const percent = Math.min(width / image.width, height / image.height);
-				const newWidth = image.width * percent;
-				const newHeight = image.height * percent;
-				canvas.width = newWidth;
-				canvas.height = newHeight;
-				context.drawImage(
-					image, 
-					0, 
-					0, 
-					newWidth, 
-					newHeight
-				);
-				break;
-			}
-			default:
-				context.drawImage(image, 0, 0, width, height);
-				break;
-			}
-			if(typeof type === "string") {
-				if(["image/webp"].includes(type)) {
-					const image = await webp.buffer2webpbuffer(canvas.toBuffer("image/jpeg"), "jpg", "-q 80");
-					res.setHeader("Content-Type", "image/webp");
-					res.send(image);
-					return;
-				}
-			} else {
-				res.setHeader("Content-Type", "image/jpeg");
-				res.send(canvas.toBuffer("image/jpeg"));
-				return;
-			}
+		const width = Number(source.width);
+		const height = Number(source.height);
+		const key = `image_${src}_${type}_${size}_${width}_${height}`;
+		const value = await client.get(key);
+		if(value) {
+			res.setHeader("Content-Type", type);
+			res.send(value);
+		} else {
+			const image = await getImage({
+				src,
+				type,
+				size,
+				width,
+				height
+			});
+			await client.set(key, image);
+			res.setHeader("Content-Type", type);
+			res.send(image);
 		}
 	} catch(e) {
 		res.status(400).send({
 			error : e.message
 		});
 	}
+
 };
 
 // const getWatermark = () => {

@@ -224,7 +224,7 @@ export const getServerSideProps = (context) => {
 	const { protocol, host } = absoluteUrl(req);
 	return {
 		props : {
-			domain : `${protocol}//${host}` 
+			domain : encodeURIComponent(`${protocol}//${host}`)
 		}
 	};
 };
