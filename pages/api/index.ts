@@ -7,14 +7,7 @@ import webp from "webp-converter";
 
 import fs from "fs";
 import path from "path";
-
-import { createClient } from "redis";
-
-const client = createClient({
-	url : process.env.REDIS
-});
-
-client.on("error", (err) => console.log("Redis Client Error", err));
+import { withRedis } from "../../src/redis";
 
 // we need this folder in order to generate webp images
 fs.mkdir(path.join("node_modules", "webp-converter", "temp"), {
@@ -825,9 +818,8 @@ const getImage = async ({
 	}
 };
 
-export default async (req : NextApiRequest, res : NextApiResponse) => {
+export default withRedis(async (req, res) => {
 	try {
-		await client.connect();
 		const source = req.body || req.query;
 		const {
 			src,
@@ -837,7 +829,7 @@ export default async (req : NextApiRequest, res : NextApiResponse) => {
 		const width = Number(source.width);
 		const height = Number(source.height);
 		const key = `image_${src}_${type}_${size}_${width}_${height}`;
-		const value = await client.get(key);
+		const value = await req.redis.get(key);
 		if(value) {
 			res.setHeader("Content-Type", type);
 			res.send(value);
@@ -849,7 +841,7 @@ export default async (req : NextApiRequest, res : NextApiResponse) => {
 				width,
 				height
 			});
-			await client.set(key, image);
+			await req.redis.set(key, image);
 			res.setHeader("Content-Type", type);
 			res.send(image);
 		}
@@ -858,8 +850,7 @@ export default async (req : NextApiRequest, res : NextApiResponse) => {
 			error : e.message
 		});
 	}
-
-};
+});
 
 // const getWatermark = () => {
 //     const text = "watermark";
