@@ -7,7 +7,7 @@ import fs from "fs";
 import path from "path";
 import { withRedis } from "../../src/redis";
 
-const version = "0.0.0.0";
+const version = "0.0.0.1";
 
 // we need this folder in order to generate webp images
 fs.mkdir(path.join("node_modules", "webp-converter", "temp"), {
@@ -754,13 +754,13 @@ const getImage = async ({
     size : string
     type : string
 }) : Promise<Buffer> => {
-	try {
-		const root = JSON.parse(src);
-		return api(root, 1, 12);
-	} catch(e) {
-		// DO NOTHING
-	}
 	if(typeof src === "string") {
+		try {
+			const root = JSON.parse(src);
+			return api(root, 1, 12);
+		} catch(e) {
+			// DO NOTHING
+		}
 		const image = await loadImage(src);
 		if(!isNaN(width) && isNaN(height)) {
 			height = (width / image.width) * image.height;
@@ -807,14 +807,15 @@ const getImage = async ({
 			context.drawImage(image, 0, 0, width, height);
 			break;
 		}
-		if(typeof type === "string") {
-			if(["image/webp"].includes(type)) {
-				const image = await webp.buffer2webpbuffer(canvas.toBuffer("image/jpeg"), "jpg", "-q 80");
-				return image;
-			}
+		if(["image/webp"].includes(type)) {
+			return webp.buffer2webpbuffer(canvas.toBuffer("image/jpeg"), "jpg", "-q 80");
+		} else if(["image/png", "image/jpeg"].includes(type)) {
+			return webp.buffer2webpbuffer(canvas.toBuffer(type as any), "jpg", "-q 80");
 		} else {
-			return canvas.toBuffer("image/jpeg");
+			throw new Error(`invalid type ${type}`);
 		}
+	} else {
+		throw new Error(`invalid src ${src}`);
 	}
 };
 

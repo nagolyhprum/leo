@@ -201,17 +201,17 @@ const Homepage = ({
 
 			<h2>API</h2>
 			<h3>Resized image (320x240)</h3>
-			<img src={`/api?src=${domain}%2Fbear.jpeg&width=320&height=240`} />
+			<img src={`/api?src=${encodeURIComponent(domain)}%2Fbear.jpeg&width=320&height=240`} />
 			<h3>Resized image (w320)</h3>
-			<img src={`/api?src=${domain}%2Fbear.jpeg&width=320`} />
+			<img src={`/api?src=${encodeURIComponent(domain)}%2Fbear.jpeg&width=320`} />
 			<h3>Resized image (h240)</h3>
-			<img src={`/api?src=${domain}%2Fbear.jpeg&height=240`} />
+			<img src={`/api?src=${encodeURIComponent(domain)}%2Fbear.jpeg&height=240`} />
 			<h3>Cover</h3>
-			<img src={`/api?src=${domain}%2Fbear.jpeg&width=400&height=200&size=cover`} />
+			<img src={`/api?src=${encodeURIComponent(domain)}%2Fbear.jpeg&width=400&height=200&size=cover`} />
 			<h3>Contain</h3>
-			<img src={`/api?src=${domain}%2Fbear.jpeg&width=240&height=240&size=contain`} />
+			<img src={`/api?src=${encodeURIComponent(domain)}%2Fbear.jpeg&width=240&height=240&size=contain`} />
 			<h3>WebP Support</h3>
-			<img src={`/api?src=${domain}%2Fbear.jpeg&width=320&height=120&size=contain&type=image/webp`} />
+			<img src={`/api?src=${encodeURIComponent(domain)}%2Fbear.jpeg&width=320&height=120&size=contain&type=image/webp`} />
 			<Columns />
 			<Rows />
 			<StackWithImages domain={domain} />
@@ -224,7 +224,7 @@ export const getServerSideProps = (context) => {
 	const { protocol, host } = absoluteUrl(req);
 	return {
 		props : {
-			domain : encodeURIComponent(`${protocol}//${host}`)
+			domain : `${protocol}//${host}`
 		}
 	};
 };
