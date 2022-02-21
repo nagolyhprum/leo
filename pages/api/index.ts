@@ -1,5 +1,3 @@
-import { NextApiRequest, NextApiResponse } from "next";
-
 import { createCanvas, loadImage } from "canvas";
 import { MATCH, WRAP } from "../../src/client/api";
 
@@ -8,6 +6,8 @@ import webp from "webp-converter";
 import fs from "fs";
 import path from "path";
 import { withRedis } from "../../src/redis";
+
+const version = "0.0.0.0";
 
 // we need this folder in order to generate webp images
 fs.mkdir(path.join("node_modules", "webp-converter", "temp"), {
@@ -828,11 +828,11 @@ export default withRedis(async (req, res) => {
 		} = source;
 		const width = Number(source.width);
 		const height = Number(source.height);
-		const key = `image_${src}_${type}_${size}_${width}_${height}`;
+		const key = `image_${version}_${src}_${type}_${size}_${width}_${height}`;
 		const value = await req.redis.get(key);
 		if(value) {
 			res.setHeader("Content-Type", type);
-			res.send(value);
+			res.send(Buffer.from(value, "base64"));
 		} else {
 			const image = await getImage({
 				src,
@@ -841,7 +841,7 @@ export default withRedis(async (req, res) => {
 				width,
 				height
 			});
-			await req.redis.set(key, image);
+			await req.redis.set(key, image.toString("base64"));
 			res.setHeader("Content-Type", type);
 			res.send(image);
 		}
