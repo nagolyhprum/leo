@@ -275,11 +275,11 @@ const Homepage = ({
 			<Image src="/bear.jpeg" width={320} />
 			<h3>Resized image (h240)</h3>
 			<Image src="/bear.jpeg" height={240} />
-			<h3>Cover</h3>
+			<h3>Cover (400x200)</h3>
 			<Image src="/bear.jpeg" width={400} height={200} size="cover" />
-			<h3>Contain</h3>
+			<h3>Contain (240x240)</h3>
 			<Image src="/bear.jpeg" width={240} height={240} size="contain" />
-			<h3>WebP Support</h3>
+			<h3>WebP Support (320x120)</h3>
 			<Image src="/bear.jpeg" width={320} height={120} size="contain" type="image/webp" />
 			<Columns />
 			<Rows />
