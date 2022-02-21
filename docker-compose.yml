@@ -7,7 +7,7 @@ services:
       - ./pages:/home/node/pages
       - ./public:/home/node/public
     environment:
-      - REDIS=redis://redis:6379
+      - REDIS_URL=redis://redis:6379
     ports:
       - 80:3000
   redis:
