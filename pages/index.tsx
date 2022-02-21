@@ -1,6 +1,6 @@
 import fetch from "cross-fetch";
 import absoluteUrl from "next-absolute-url";
-import { createContext, ForwardedRef, forwardRef, MutableRefObject, ReactEventHandler, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { MutableRefObject, useEffect, useRef, useState } from "react";
 import { 
 	text,
 	WRAP,
@@ -8,7 +8,6 @@ import {
 	padding,
 	margin,
 	color,
-	leonarto,
 	column,
 	background,
 	row,
@@ -22,81 +21,15 @@ import {
 	round,
 	translate
 } from "../src/client/api";
+import { Image, ImageProvider, useCanvas } from "../src/client/api/react";
 
-const ImageContext = createContext({
-	domain : "",
-	endpoint : ""
-});
-
-const ImageProvider = ({
-	domain,
-	endpoint = "/api",
-	children
+export const stackWithImages = ({
+	domain
 } : {
     domain : string
-    endpoint?: string
-    children : React.ReactNode
 }) => {
-	return (
-		<ImageContext.Provider value={{
-			domain,
-			endpoint,
-		}}>
-			{children}
-		</ImageContext.Provider>
-	);
-};
-
-const Image = forwardRef(({
-	src,
-	width,
-	height,
-	type,
-	size,
-} : {
-    src : string
-    width?: number
-    height?: number
-    type?: "image/png" | "image/webp" | "image/jpeg"
-    size?: "cover" | "contain"
-}, ref : ForwardedRef<HTMLImageElement>) => {
-	const context = useContext(ImageContext);
-	const query = {
-		src : `${context.domain}${src}`,
-		width,
-		height,
-		type,
-		size
-	};
-	return (
-		<div style={{
-			background : "black",
-			display : "inline-flex",
-			justifyContent : "center",
-			alignItems : "center",
-			...(width ? {
-				width : `${width}px`
-			} : {}),
-			...(height ? {
-				height : `${height}px`
-			} : {}),
-		}}>
-			<img ref={ref} src={`${context.endpoint}?${
-				Object.keys(query).filter(
-					key => query[key]
-				).map(
-					key => `${encodeURIComponent(key)}=${encodeURIComponent(query[key])}`
-				).join("&")
-			}`} />
-		</div>
-	);
-});
-
-export const stackWithImages = (domain) => {
 	const Basketball = `${domain}/basketball.svg`;
-	return leonarto({
-		endpoint : "/api"
-	}).canvas(stack(MATCH, MATCH, [  
+	return stack(MATCH, MATCH, [  
 		image(150, WRAP, [
 			source(Basketball),
 			position({
@@ -142,69 +75,57 @@ export const stackWithImages = (domain) => {
 				y : -.5
 			})
 		])
-	]), 400, 400);
+	]);
 };
 
 export const columns = () => {
-	return leonarto({
-		endpoint : "/api"
-	}).canvas(
-		row(MATCH, MATCH, [
+	return row(MATCH, MATCH, [
+		padding([10, 12, 14, 16]),
+		background("white"),
+		column(MATCH, MATCH, [
 			padding([10, 12, 14, 16]),
-			background("white"),
-			column(MATCH, MATCH, [
-				padding([10, 12, 14, 16]),
-				mainAxisAlignment("start"),
-				crossAxisAlignment("center"),
-				...children
-			]),
-			column(MATCH, MATCH, [
-				padding([10, 12, 14, 16]),
-				mainAxisAlignment("center"),
-				crossAxisAlignment("end"),
-				...children
-			]),
-			column(MATCH, MATCH, [
-				padding([10, 12, 14, 16]),
-				mainAxisAlignment("end"),
-				crossAxisAlignment("start"),
-				...children
-			]),
+			mainAxisAlignment("start"),
+			crossAxisAlignment("center"),
+			...children
 		]),
-		400, 
-		400
-	);
+		column(MATCH, MATCH, [
+			padding([10, 12, 14, 16]),
+			mainAxisAlignment("center"),
+			crossAxisAlignment("end"),
+			...children
+		]),
+		column(MATCH, MATCH, [
+			padding([10, 12, 14, 16]),
+			mainAxisAlignment("end"),
+			crossAxisAlignment("start"),
+			...children
+		]),
+	]);
 };
 
 export const rows = () => {
-	return leonarto({
-		endpoint : "/api"
-	}).canvas(
-		column(MATCH, MATCH, [
+	return column(MATCH, MATCH, [
+		padding([10, 12, 14, 16]),
+		background("white"),
+		row(MATCH, MATCH, [
 			padding([10, 12, 14, 16]),
-			background("white"),
-			row(MATCH, MATCH, [
-				padding([10, 12, 14, 16]),
-				mainAxisAlignment("start"),
-				crossAxisAlignment("center"),
-				...children
-			]),
-			row(MATCH, MATCH, [
-				padding([10, 12, 14, 16]),
-				mainAxisAlignment("center"),
-				crossAxisAlignment("end"),
-				...children
-			]),
-			row(MATCH, MATCH, [
-				padding([10, 12, 14, 16]),
-				mainAxisAlignment("end"),
-				crossAxisAlignment("start"),
-				...children
-			])
+			mainAxisAlignment("start"),
+			crossAxisAlignment("center"),
+			...children
 		]),
-		400, 
-		400
-	);
+		row(MATCH, MATCH, [
+			padding([10, 12, 14, 16]),
+			mainAxisAlignment("center"),
+			crossAxisAlignment("end"),
+			...children
+		]),
+		row(MATCH, MATCH, [
+			padding([10, 12, 14, 16]),
+			mainAxisAlignment("end"),
+			crossAxisAlignment("start"),
+			...children
+		])
+	]);
 };
 
 const children = ["A", "**B**", "C"].map(it => text(WRAP, WRAP, [
@@ -221,7 +142,7 @@ const children = ["A", "**B**", "C"].map(it => text(WRAP, WRAP, [
 ]));
 
 const Columns = () => {
-	const src = useMemo(() => columns(), []);
+	const src = useCanvas(columns, 400, 400, []);
 	return (
 		<>
 			<h3>Columns</h3>
@@ -231,7 +152,7 @@ const Columns = () => {
 };
 
 const Rows = () => {
-	const src = useMemo(() => rows(), []);
+	const src = useCanvas(rows, 400, 400, []);
 	return (
 		<>
 			<h3>Rows</h3>
@@ -240,12 +161,8 @@ const Rows = () => {
 	);
 };
 
-const StackWithImages = ({
-	domain
-} : {
-    domain : string
-}) => {
-	const src = useMemo(() => stackWithImages(domain), []);
+const StackWithImages = () => {
+	const src = useCanvas(stackWithImages, 400, 400, []);
 	return (
 		<>
 			<h3>Stack with Images</h3>
@@ -335,7 +252,7 @@ const Homepage = ({
 			<ImageWrapper src="/bear.jpeg" width={320} height={120} size="contain" type="image/webp" />
 			<Columns />
 			<Rows />
-			<StackWithImages domain={domain} />
+			<StackWithImages />
 		</ImageProvider>
 	);
 };
