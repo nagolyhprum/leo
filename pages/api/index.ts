@@ -772,7 +772,7 @@ const getImage = async ({
 	if(typeof src === "string") {
 		const root = parseJSON(src);
 		if(root) {
-			const buffer = api(root, 1, 12, type);
+			const buffer = await api(root, 1, 12, type);
 			if(type === "image/webp") {
 				return webp.buffer2webpbuffer(buffer, "png", `-q ${quality}`);
 			} else {
