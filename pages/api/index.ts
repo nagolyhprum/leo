@@ -810,7 +810,7 @@ const getImage = async ({
 		if(["image/webp"].includes(type)) {
 			return webp.buffer2webpbuffer(canvas.toBuffer("image/jpeg"), "jpg", "-q 80");
 		} else if(["image/png", "image/jpeg"].includes(type)) {
-			return webp.buffer2webpbuffer(canvas.toBuffer(type as any), "jpg", "-q 80");
+			return canvas.toBuffer(type as any);
 		} else {
 			throw new Error(`invalid type ${type}`);
 		}
