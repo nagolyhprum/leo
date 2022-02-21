@@ -8,7 +8,8 @@ services:
       - ./public:/home/node/public
     environment:
       - REDIS_URL=redis://redis:6379
+      - PORT=80
     ports:
-      - 80:3000
+      - 80:80
   redis:
     image: redis

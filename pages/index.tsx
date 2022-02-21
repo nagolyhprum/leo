@@ -1,6 +1,6 @@
 import fetch from "cross-fetch";
 import absoluteUrl from "next-absolute-url";
-import { createContext, ReactEventHandler, useContext, useMemo, useState } from "react";
+import { createContext, ForwardedRef, forwardRef, MutableRefObject, ReactEventHandler, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { 
 	text,
 	WRAP,
@@ -47,21 +47,19 @@ const ImageProvider = ({
 	);
 };
 
-const Image = ({
+const Image = forwardRef(({
 	src,
 	width,
 	height,
 	type,
 	size,
-	onLoad
 } : {
     src : string
     width?: number
     height?: number
     type?: "image/png" | "image/webp" | "image/jpeg"
     size?: "cover" | "contain"
-    onLoad?: ReactEventHandler<HTMLImageElement>
-}) => {
+}, ref : ForwardedRef<HTMLImageElement>) => {
 	const context = useContext(ImageContext);
 	const query = {
 		src : `${context.domain}${src}`,
@@ -83,7 +81,7 @@ const Image = ({
 				height : `${height}px`
 			} : {}),
 		}}>
-			<img onLoad={onLoad} src={`${context.endpoint}?${
+			<img ref={ref} src={`${context.endpoint}?${
 				Object.keys(query).filter(
 					key => query[key]
 				).map(
@@ -92,7 +90,7 @@ const Image = ({
 			}`} />
 		</div>
 	);
-};
+});
 
 export const stackWithImages = (domain) => {
 	const Basketball = `${domain}/basketball.svg`;
@@ -258,32 +256,36 @@ const StackWithImages = ({
 
 const useTracker = () : {
     stats : React.ReactNode
-    onLoad : ReactEventHandler<HTMLImageElement>
+    ref : MutableRefObject<HTMLImageElement>
 } => {
+	const ref = useRef<HTMLImageElement | null>();
 	const [start, setStart] = useState(0);
 	const [stop, setStop] = useState(0);
 	const [size, setSize] = useState(0);
+	useEffect(() => {
+		(async () => {
+			setStart(Date.now());
+			const res = await fetch(ref.current?.src);
+			setStop(Date.now());
+			setSize(Number(res.headers.get("Content-Length")));
+		})();
+	}, [ref.current?.src]);
 	return {
 		stats : start && stop && size ? (
 			<>
-				<div>Duration : {stop - start}</div>
-				<div>Length : {size}</div>
+				<div>Duration : {(stop - start) / 1000}s</div>
+				<div>Length : {Math.floor(size / 1024)}KB</div>
 			</>
 		) : null,
-		onLoad : async (event) => {
-			setStart(Date.now());
-			const res = await fetch((event.target as HTMLImageElement).src);
-			setStop(Date.now());
-			setSize(Number(res.headers["Content-Length"]));
-		},
+		ref
 	};
 };
 
 const ImageWrapper = (props : Parameters<typeof Image>[0]) => {
-	const { onLoad, stats } = useTracker();
+	const { stats, ref } = useTracker();
 	return (
 		<div>
-			<Image {...props} onLoad={onLoad} />
+			<Image {...props} ref={ref} />
 			{stats}
 		</div>
 	);
@@ -294,10 +296,10 @@ const RawImageWrapper = (props : {
     width?: number
     height?: number
 }) => {
-	const { onLoad, stats } = useTracker();
+	const { ref, stats } = useTracker();
 	return (
 		<div>
-			<img {...props} onLoad={onLoad} />
+			<img {...props} ref={ref} />
 			{stats}
 		</div>
 	);
