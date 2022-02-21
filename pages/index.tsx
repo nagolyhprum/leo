@@ -142,7 +142,11 @@ const children = ["A", "**B**", "C"].map(it => text(WRAP, WRAP, [
 ]));
 
 const Columns = () => {
-	const src = useCanvas(columns, 400, 400, []);
+	const src = useCanvas({
+		root : columns, 
+		width : 400, 
+		height : 400
+	}, []);
 	return (
 		<>
 			<h3>Columns</h3>
@@ -152,7 +156,11 @@ const Columns = () => {
 };
 
 const Rows = () => {
-	const src = useCanvas(rows, 400, 400, []);
+	const src = useCanvas({
+		root : rows, 
+		width : 400, 
+		height : 400
+	}, []);
 	return (
 		<>
 			<h3>Rows</h3>
@@ -162,7 +170,13 @@ const Rows = () => {
 };
 
 const StackWithImages = () => {
-	const src = useCanvas(stackWithImages, 400, 400, []);
+	const src = useCanvas({
+		root : stackWithImages, 
+		width : 400, 
+		height : 400,
+		type : "image/webp",
+		quality : 50
+	}, []);
 	return (
 		<>
 			<h3>Stack with Images</h3>
@@ -249,7 +263,7 @@ const Homepage = ({
 			<h3>Contain (240x240)</h3>
 			<ImageWrapper src="/bear.jpeg" width={240} height={240} size="contain" />
 			<h3>WebP Support (320x120)</h3>
-			<ImageWrapper src="/bear.jpeg" width={320} height={120} size="contain" type="image/webp" />
+			<ImageWrapper src="/bear.jpeg" width={320} height={120} size="contain" type="image/webp" quality={80} />
 			<Columns />
 			<Rows />
 			<StackWithImages />

@@ -6,20 +6,38 @@ export const ImageContext = createContext({
 	endpoint : ""
 });
 
-export const useCanvas = (root : ({
-	endpoint,
-	domain
+export const useCanvas = ({
+	root,
+	width,
+	height,
+	quality,
+	type
 } : {
-    endpoint : string
-    domain : string
-}) => (config : ComponentConfig) => Component, width : number, height : number, deps : DependencyList) => {
+	root : ({
+		endpoint,
+		domain
+	} : {
+		endpoint : string
+		domain : string
+	}) => (config : ComponentConfig) => Component,
+	width : number 
+	height : number
+	quality?: number
+	type?: string
+}, deps : DependencyList) => {
 	const context = useContext(ImageContext);
 	const { endpoint } = context;
 	return useMemo(() => {
 		return leonarto({
 			endpoint
-		}).canvas(root(context), width, height);
-	}, [width, height, ...deps]);
+		}).canvas({
+			root : root(context), 
+			width, 
+			height,
+			quality,
+			type
+		});
+	}, [width, height, quality, type, ...deps]);
 };
 
 export const ImageProvider = ({
@@ -47,12 +65,14 @@ export const Image = forwardRef(({
 	height,
 	type,
 	size,
+	quality
 } : {
     src : string
     width?: number
     height?: number
     type?: "image/png" | "image/webp" | "image/jpeg"
     size?: "cover" | "contain"
+	quality?: number
 }, ref : ForwardedRef<HTMLImageElement>) => {
 	const context = useContext(ImageContext);
 	const query = {
@@ -60,7 +80,8 @@ export const Image = forwardRef(({
 		width,
 		height,
 		type,
-		size
+		size,
+		quality
 	};
 	return (
 		<div style={{

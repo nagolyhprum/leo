@@ -67,19 +67,35 @@ export const leonarto = (config : {
   endpoint : string
 }) => {
 	return {
-		canvas : (
-			component : (config : ComponentConfig) => Component,
-			width : number,
+		canvas : ({
+			root,
+			width,
+			height,
+			type,
+			quality,
+		} : {
+			root : (config : ComponentConfig) => Component
+			width : number
 			height : number
-		) => {
-			const root = component({
-				parent : {
-					height,
-					width,
-					type: "root"
-				} as Component
-			});
-			return `${config.endpoint}?src=${encodeURIComponent(JSON.stringify(root, (key, value) => key === "parent" ? undefined : value))}`;
+			type?: string
+			quality?: number
+		}) => {
+			const query = {
+				src : JSON.stringify(root({
+					parent : {
+						height,
+						width,
+						type: "root"
+					} as Component
+				}), (key, value) => key === "parent" ? undefined : value),
+				type,
+				quality
+			};
+			return `${config.endpoint}?${Object.keys(query).filter(
+				key => query[key]
+			).map(
+				key => `${encodeURIComponent(key)}=${encodeURIComponent(query[key])}`
+			).join("&")}`;
 		}
 	};
 };

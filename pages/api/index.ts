@@ -21,7 +21,8 @@ const debug = true;
 export const api = async (    
 	root : Component,
 	ratio : number,
-	defaultFontSize : 12
+	defaultFontSize : 12,
+	type : string
 ) => {    
 	const getSpacing = <T>(spacing : Spacing | null | undefined, zero : T) : SpacingCalculation<T> => {
 		if(typeof spacing === "number") {
@@ -738,7 +739,11 @@ export const api = async (
 
 	draw(root, images);
 
-	return canvas.toBuffer("image/png");
+	if(type === "image/webp") {
+		return canvas.toBuffer("image/png");
+	} else {
+		return canvas.toBuffer(type as any);
+	}
 };
 
 const getImage = async ({
@@ -746,18 +751,25 @@ const getImage = async ({
 	width,
 	height,
 	size,
-	type
+	type,
+	quality
 } : {
     src : string
     width : number
     height : number
     size : string
     type : string
+	quality : number
 }) : Promise<Buffer> => {
 	if(typeof src === "string") {
 		try {
 			const root = JSON.parse(src);
-			return api(root, 1, 12);
+			const buffer = api(root, 1, 12, type);
+			if(type === "image/webp") {
+				return webp.buffer2webpbuffer(buffer, "png", `-q ${quality}`);
+			} else {
+				return buffer;
+			}
 		} catch(e) {
 			// DO NOTHING
 		}
@@ -808,7 +820,7 @@ const getImage = async ({
 			break;
 		}
 		if(["image/webp"].includes(type)) {
-			return webp.buffer2webpbuffer(canvas.toBuffer("image/png"), "jpg", "-q 80");
+			return webp.buffer2webpbuffer(canvas.toBuffer("image/png"), "png", `-q ${quality}`);
 		} else if(["image/png", "image/jpeg"].includes(type)) {
 			return canvas.toBuffer(type as any);
 		} else {
@@ -829,6 +841,7 @@ export default withRedis(async (req, res) => {
 		} = source;
 		const width = Number(source.width);
 		const height = Number(source.height);
+		const quality = Number(source.quality || 100) || 100;
 		const key = `image_${version}_${src}_${type}_${size}_${width}_${height}`;
 		const value = await req.redis.get(key);
 		if(value) {
@@ -840,7 +853,8 @@ export default withRedis(async (req, res) => {
 				type,
 				size,
 				width,
-				height
+				height,
+				quality
 			});
 			await req.redis.set(key, image.toString("base64"));
 			res.setHeader("Content-Type", type);
