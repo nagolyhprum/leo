@@ -808,7 +808,7 @@ const getImage = async ({
 			break;
 		}
 		if(["image/webp"].includes(type)) {
-			return webp.buffer2webpbuffer(canvas.toBuffer("image/jpeg"), "jpg", "-q 80");
+			return webp.buffer2webpbuffer(canvas.toBuffer("image/png"), "jpg", "-q 80");
 		} else if(["image/png", "image/jpeg"].includes(type)) {
 			return canvas.toBuffer(type as any);
 		} else {
