@@ -7,7 +7,7 @@ import fs from "fs";
 import path from "path";
 import { withRedis } from "../../src/redis";
 
-const version = "0.0.0.2";
+const version = "0.0.0.3";
 
 // we need this folder in order to generate webp images
 fs.mkdir(path.join("node_modules", "webp-converter", "temp"), {
