@@ -273,7 +273,7 @@ const useTracker = () : {
 	return {
 		stats : start && stop && size ? (
 			<>
-				<div>Duration : {(stop - start) / 1000}s</div>
+				<div>Duration : {stop - start}ms</div>
 				<div>Length : {Math.floor(size / 1024)}KB</div>
 			</>
 		) : null,
