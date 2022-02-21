@@ -1,5 +1,6 @@
+import fetch from "cross-fetch";
 import absoluteUrl from "next-absolute-url";
-import { createContext, useContext, useMemo } from "react";
+import { createContext, ReactEventHandler, useContext, useMemo, useState } from "react";
 import { 
 	text,
 	WRAP,
@@ -51,13 +52,15 @@ const Image = ({
 	width,
 	height,
 	type,
-	size
+	size,
+	onLoad
 } : {
     src : string
     width?: number
     height?: number
     type?: "image/png" | "image/webp" | "image/jpeg"
     size?: "cover" | "contain"
+    onLoad?: ReactEventHandler<HTMLImageElement>
 }) => {
 	const context = useContext(ImageContext);
 	const query = {
@@ -80,7 +83,7 @@ const Image = ({
 				height : `${height}px`
 			} : {}),
 		}}>
-			<img src={`${context.endpoint}?${
+			<img onLoad={onLoad} src={`${context.endpoint}?${
 				Object.keys(query).filter(
 					key => query[key]
 				).map(
@@ -253,6 +256,53 @@ const StackWithImages = ({
 	);
 };
 
+const useTracker = () : {
+    stats : React.ReactNode
+    onLoad : ReactEventHandler<HTMLImageElement>
+} => {
+	const [start, setStart] = useState(0);
+	const [stop, setStop] = useState(0);
+	const [size, setSize] = useState(0);
+	return {
+		stats : start && stop && size ? (
+			<>
+				<div>Duration : {stop - start}</div>
+				<div>Length : {size}</div>
+			</>
+		) : null,
+		onLoad : async (event) => {
+			setStart(Date.now());
+			const res = await fetch((event.target as HTMLImageElement).src);
+			setStop(Date.now());
+			setSize(Number(res.headers["Content-Length"]));
+		},
+	};
+};
+
+const ImageWrapper = (props : Parameters<typeof Image>[0]) => {
+	const { onLoad, stats } = useTracker();
+	return (
+		<div>
+			<Image {...props} onLoad={onLoad} />
+			{stats}
+		</div>
+	);
+};
+
+const RawImageWrapper = (props : {
+    src : string
+    width?: number
+    height?: number
+}) => {
+	const { onLoad, stats } = useTracker();
+	return (
+		<div>
+			<img {...props} onLoad={onLoad} />
+			{stats}
+		</div>
+	);
+};
+
 const Homepage = ({
 	domain
 } : {
@@ -264,23 +314,23 @@ const Homepage = ({
 
 			<h2>Raw</h2>
 			<h3>Image (w320)</h3>
-			<img width="320" src="/bear.jpeg" />
+			<RawImageWrapper width={320} src="/bear.jpeg" />
 			<h3>Image (h240)</h3>
-			<img height="240" src="/bear.jpeg" />
+			<RawImageWrapper height={240} src="/bear.jpeg" />
 
 			<h2>API</h2>
 			<h3>Resized image (320x240)</h3>
-			<Image src="/bear.jpeg" width={320} height={240} />
+			<ImageWrapper src="/bear.jpeg" width={320} height={240} />
 			<h3>Resized image (w320)</h3>
-			<Image src="/bear.jpeg" width={320} />
+			<ImageWrapper src="/bear.jpeg" width={320} />
 			<h3>Resized image (h240)</h3>
-			<Image src="/bear.jpeg" height={240} />
+			<ImageWrapper src="/bear.jpeg" height={240} />
 			<h3>Cover (400x200)</h3>
-			<Image src="/bear.jpeg" width={400} height={200} size="cover" />
+			<ImageWrapper src="/bear.jpeg" width={400} height={200} size="cover" />
 			<h3>Contain (240x240)</h3>
-			<Image src="/bear.jpeg" width={240} height={240} size="contain" />
+			<ImageWrapper src="/bear.jpeg" width={240} height={240} size="contain" />
 			<h3>WebP Support (320x120)</h3>
-			<Image src="/bear.jpeg" width={320} height={120} size="contain" type="image/webp" />
+			<ImageWrapper src="/bear.jpeg" width={320} height={120} size="contain" type="image/webp" />
 			<Columns />
 			<Rows />
 			<StackWithImages domain={domain} />
