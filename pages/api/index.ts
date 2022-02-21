@@ -746,6 +746,14 @@ export const api = async (
 	}
 };
 
+const parseJSON = (input : string) => {
+	try {
+		return JSON.parse(input);
+	} catch(e) {
+		return null;
+	}
+};
+
 const getImage = async ({
 	src,
 	width,
@@ -762,16 +770,14 @@ const getImage = async ({
 	quality : number
 }) : Promise<Buffer> => {
 	if(typeof src === "string") {
-		try {
-			const root = JSON.parse(src);
+		const root = parseJSON(src);
+		if(root) {
 			const buffer = api(root, 1, 12, type);
 			if(type === "image/webp") {
 				return webp.buffer2webpbuffer(buffer, "png", `-q ${quality}`);
 			} else {
 				return buffer;
 			}
-		} catch(e) {
-			// DO NOTHING
 		}
 		const image = await loadImage(src);
 		if(!isNaN(width) && isNaN(height)) {
