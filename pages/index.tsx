@@ -77,7 +77,7 @@ const Image = ({
 				width : `${width}px`
 			} : {}),
 			...(height ? {
-				width : `${height}px`
+				height : `${height}px`
 			} : {}),
 		}}>
 			<img src={`${context.endpoint}?${
